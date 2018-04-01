@@ -1,38 +1,28 @@
 var createError = require('http-errors');
 var express = require('express');
 var mongoose = require('mongoose');
+require('./models/user');
+require('./models/message');
 var bodyParser = require('body-parser');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var moment = require('moment');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
 var app = express();
-const MongoClient = require('mongodb').MongoClient;
-const assert = require('assert');
 
-// const url = 'mongodb://users:user1992@ds157723.mlab.com:57723/userauth';
-// const dbName = 'userauth';
-
-// MongoClient.connect(url, function(err, client) {
-//   assert.equal(null, err);
-//   console.log("Connected successfully to server");
- 
-//   var db = client.db(dbName);
- 
-//   client.close();
-// });
-
-var db_config = require('./config/db');
-mongoose.connect(db_config.url);
-
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function() {
-  console.log('Connected successfully to server')
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  res.header("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS");
+  next();
 });
+
+const assert = require('assert');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -48,24 +38,26 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
-var loginSchema = mongoose.Schema({
-  email: String,
-  password: String
+var db_config = require('./config/db');
+mongoose.connect(db_config.url);
+
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  console.log('Connected successfully to server')
 });
 
-var registerSchema = mongoose.Schema({
-  email: String,
-  password: String
-});
 
-var login = mongoose.model('users', loginSchema);
+var user = mongoose.model('users');
+var generalMessage = mongoose.model('generalMessages');
 
 app.post('/login', (req, res, next) => {
   var login_user = {
     email: req.body.email,
     password: req.body.password
   }
-  login.find(login_user, function (err, user) {
+  user.find(login_user, function (err, user) {
+    var error = new Error();
     if (err) {
       error.name = 'BadRequest';
       error.message = 'The login is failed.';
@@ -85,11 +77,12 @@ app.post('/login', (req, res, next) => {
 
 app.post('/register', (req, res, next) => {
   var error = new Error();
-  var register_user = new login({
+  var register_user = new user({
+    name: req.body.name,
     email: req.body.email,
     password: req.body.password
   });
-  login.find({email: register_user.email}, function (err, user) {
+  user.find({email: register_user.email}, function (err, user) {
     if (err) nex(err);
     if (user[0]) {
       error.name = 'BadRequest';
@@ -118,7 +111,7 @@ app.get('/reset', (req, res, next) => {
     email: req.query.email,
   }
 
-  login.find(forget_user, function (err, user) {
+  user.find(forget_user, function (err, user) {
     if (err) next(err);
     if (user[0]) {
       res.send(user);
@@ -131,6 +124,28 @@ app.get('/reset', (req, res, next) => {
   })
 });
 
+app.get('/message', (req, res, next) => {  
+  
+  var error = new Error();
+  var create_date = {
+    "date": {
+      "$gte" : new Date(Date.now() - 7 * 24 * 3600 * 1000),
+      "$lte" : new Date()
+    }
+  };
+
+  generalMessage.find(create_date, function (err, msgs) {
+    if (err) next(err);
+    if (msgs) {
+      res.send(msgs);
+    } else {
+      error.name = 'BadRequest';
+      error.message = 'User does not exist';
+      error.status = 400;
+      next(error);
+    }
+  })
+})
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -148,4 +163,11 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
+function getDBContext() {
+  return db;
+}
+
+module.exports = {
+  app: app,
+  getDBContext: getDBContext
+};

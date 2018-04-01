@@ -1,8 +1,10 @@
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+    Schema = mongoose.Schema;
 
-// define our nerd model
-// module.exports allows us to pass this to other files when it is called
-module.exports = mongoose.model('users', {
-    email : {type : String, default: 'test@c.com'},
-    password: {type : String, default: 'test123'}
+UserSchema = new Schema({
+    name: {type: String, "default": 'user'},
+    email: {type: String, "default": ''},
+    password: {type: String, "default": ''}
 });
+
+mongoose.model('users', UserSchema);

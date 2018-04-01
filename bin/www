@@ -4,9 +4,12 @@
  * Module dependencies.
  */
 
-var app = require('../app');
+var { app, getDBContext } = require('../app');
 var debug = require('debug')('node-mongodb:server');
 var http = require('http');
+var mongoose = require('mongoose');
+var moment = require('moment');
+		
 
 /**
  * Get port from environment and store in Express.
@@ -20,12 +23,52 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+var io = require('socket.io')(server);
 
 /**
  * Listen on provided port, on all network interfaces.
  */
-
 server.listen(port);
+
+mongoose.connection.once('open', function() {
+	var generalMessage = mongoose.model('generalMessages');
+	var user = mongoose.model('users');
+	var error = new Error();
+	io.on('connection', (socket) => {	
+		socket.on('SEND_MESSAGE', function(data){
+			var user_idx = {
+				"_id": data.user
+			};
+
+			user.find(user_idx, function (err, user) {
+				if (err) nex(err);
+				if (user[0]) {					
+					
+					var msg = new generalMessage({
+						userId: data.user,
+						user: user[0].name,
+						message: data.message,
+						date: new Date()
+					});
+					var res_msg = {
+						user: user[0].name,
+						message: data.message,
+						date: new Date()
+					};
+					msg.save();
+					io.emit('RECEIVE_MESSAGE', res_msg);
+				} else {
+					error.name = 'BadRequest';
+					error.message = 'Finding the user is Failed.';
+					error.status = 400;
+					next(error);
+				}
+			});			
+		})
+	});
+});
+
+
 server.on('error', onError);
 server.on('listening', onListening);
 
