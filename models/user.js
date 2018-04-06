@@ -3,6 +3,7 @@ var mongoose = require('mongoose'),
 
 UserSchema = new Schema({
     name: {type: String, "default": 'user'},
+    workspace: {type: String, "default": ''},
     email: {type: String, "default": ''},
     password: {type: String, "default": ''}
 });
