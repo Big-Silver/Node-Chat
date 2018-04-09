@@ -1,6 +1,9 @@
 var createError = require('http-errors');
 var express = require('express');
 var mongoose = require('mongoose');
+var nodemailer = require('nodemailer');
+var nodeoutlook = require('nodejs-nodemailer-outlook')
+var smtpTransport = require('nodemailer-smtp-transport');
 require('./models/user');
 require('./models/message');
 require('./models/workspace');
@@ -9,6 +12,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var moment = require('moment');
+const xoauth2 = require('xoauth2');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -241,6 +245,50 @@ app.post('/create_workspace', (req, res, next) => {
       })
     }
   })  
+})
+
+app.post('/find_workspace', (req, res, next) => {
+  var error = new Error();
+
+  user.find({email: req.body.f_email}, function(err, user) {
+    if (err) next(err);
+    if (user[0]) {
+      var body_txt = "<b>The Urls</b></br>";
+      for (var i = 0; i < user.length; i++) {
+        body_txt += "http://localhost:3002/" + user[i].workspace + '</br>';
+      }
+      var transporter = nodemailer.createTransport({
+        service: 'Yandex',
+        auth: {
+          user: 'bigsilversstar@yandex.com',
+          pass: 'big1992'
+        }
+      });
+
+      var mailOptions = {
+        from: 'bigsilversstar@yandex.com',
+        to: 'jinli1130@outlook.com',
+        subject: 'Workspace List',
+        text: body_txt,
+        html: body_txt
+      };
+
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+        transporter.close();
+      });
+      res.send(user);
+    } else {
+      error.name = 'BadRequest';
+      error.message = "Workspcace doesn't exist.";
+      error.status = 400;
+      next(error);
+    }
+  })
 })
 
 // catch 404 and forward to error handler
