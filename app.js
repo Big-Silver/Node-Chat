@@ -60,6 +60,7 @@ var generalMessage = mongoose.model('generalMessages');
 var workspace = mongoose.model('workspaces');
 
 app.post('/login', (req, res, next) => {
+  console.log(req.body)
   var login_user = {
     workspace: req.body.workspaceId,
     email: req.body.email,
@@ -245,10 +246,13 @@ app.get('/message', (req, res, next) => {
   })
 })
 
-app.get('/users', (req, res, next) => {
+app.post('/users', (req, res, next) => {
   var error = new Error();
+  var find_user = {
+    workspace: req.body.workspaceId,
+  }
 
-  user.find({}, function (err, user) {
+  user.find(find_user, function (err, user) {
     if (err) next(err);
     if (user) {
       res.send(user);

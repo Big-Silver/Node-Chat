@@ -64,7 +64,11 @@ mongoose.connection.once('open', function() {
 					next(error);
 				}
 			});			
-		})
+		});
+    
+    socket.on('SEND_SIGNAL', function(data){
+      io.emit('RECEIVE_SIGNAL', data);
+    });
 	});
 });
 
