@@ -135,6 +135,9 @@ app.post('/register', (req, res, next) => {
             ws[0].set({users: updated_users});
             ws[0].save(function (err, updated_ws) {
               if (err) next(err);
+              const payload = {
+                id: user._id 
+              };
               var token = jwt.sign(payload, app.get('superSecret'), {
                 expiresIn: 1440
               });
