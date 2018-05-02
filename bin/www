@@ -41,7 +41,7 @@ mongoose.connection.once('open', function() {
 			};
 
 			user.find(user_idx, function (err, user) {
-				if (err) nex(err);
+				if (err) next(err);
 				if (user[0]) {					
 					
 					var msg = new generalMessage({
