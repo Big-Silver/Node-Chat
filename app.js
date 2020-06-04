@@ -341,14 +341,14 @@ app.post('/find_workspace', (req, res, next) => {
       var transporter = nodemailer.createTransport({
         service: 'Yandex',
         auth: {
-          user: 'bigsilversstar@yandex.com',
-          pass: 'big1992'
+          user: 'XXXXXXX@yandex.com',
+          pass: 'XXXXXX'
         }
       });
 
       var mailOptions = {
-        from: 'bigsilversstar@yandex.com',
-        to: 'jinli1130@outlook.com',
+        from: 'XXXXXXXX@yandex.com',
+        to: 'XXXXXXXX@outlook.com',
         subject: 'Workspace List',
         text: body_txt,
         html: body_txt
