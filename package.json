@@ -21,7 +21,7 @@
     "nodejs-nodemailer-outlook": "^1.0.8",
     "nodemailer": "^4.6.4",
     "nodemailer-smtp-transport": "^2.7.4",
-    "socket.io": "^2.0.4",
+    "socket.io": "^2.5.0",
     "xoauth2": "^1.2.0"
   },
   "devDependencies": {
